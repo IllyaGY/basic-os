@@ -1,0 +1,81 @@
+21:36:41 $ git clone git@github.com:CSUS-CS-CPE159/phase0-IllyaGY.git
+Cloning into 'phase0-IllyaGY'...
+remote: Enumerating objects: 16, done.
+remote: Counting objects: 100% (16/16), done.
+remote: Compressing objects: 100% (10/10), done.
+remote: Total 16 (delta 2), reused 15 (delta 2), pack-reused 0 (from 0)
+Receiving objects: 100% (16/16), 7.88 KiB | 1.58 MiB/s, done.
+Resolving deltas: 100% (2/2), done.
+-[spede] ~ 
+21:37:39 $ /home/spede/phase0-IllyaGY/01-hello-world/
+bash: /home/spede/phase0-IllyaGY/01-hello-world/: Is a directory
+![spede] ~ 
+21:40:24 $ cd /home/spede/phase0-IllyaGY/01-hello-world/
+-[spede] ~/phase0-IllyaGY/01-hello-world (main=)
+21:40:27 $ make 
+Done linking "build/MyOS.dli" (with GDB enabled) at 1m.
+-[spede] ~/phase0-IllyaGY/01-hello-world {main %=}
+21:40:29 $ spede-target 
+Launching SPEDE target to run in the background
+-[spede] ~/phase0-IllyaGY/01-hello-world {main %=}
+21:41:22 $ spede-target -q
+The SPEDE Target has quit. Exiting...
+-[spede] ~/phase0-IllyaGY/01-hello-world {main %=}
+21:44:00 $ spede-target 
+Launching SPEDE target to run in the background
+-[spede] ~/phase0-IllyaGY/01-hello-world {main %=}
+21:45:16 $ spede-run
+The SPEDE Target will be reset, are you sure? (y/n) y
+Resetting the SPEDE Target...
+Downloading image 'build/MyOS.dli' to SPEDE Target via /dev/pts/1...
+File type is 'ELF'
+Total blocks to download:  0x8a  (128 bytes each)
+
+Load Successful ; Code loaded at 0x0x101000 (3545 bytes/sec)
+Executing the image 'build/MyOS.dli' on the SPEDE Target
+
+-[spede] ~/phase0-IllyaGY/01-hello-world {main %=}
+21:45:35 $ spede-run -d
+The SPEDE Target will be reset, are you sure? (y/n) y
+Resetting the SPEDE Target...
+Downloading image 'build/MyOS.dli' to SPEDE Target via /dev/pts/1...
+File type is 'ELF'
+Total blocks to download:  0x8a  (128 bytes each)
+
+Load Successful ; Code loaded at 0x0x101000 (3545 bytes/sec)
+Executing the image 'build/MyOS.dli' on the SPEDE Target with GDB Enabled
+Launching GDB...
+Reading symbols from build/MyOS.dli...
+Expanding full symbols from build/MyOS.dli...
+Remote debugging using /dev/pts/1
+0x0010255d in breakpoint ()
+Temporary breakpoint 1 at 0x101183: file src/hello.c, line 5.
+
+Temporary breakpoint 1, main () at src/hello.c:5
+5	    printf("Hello, world!\n");
+SPEDE GDB$ run 
+Hello, world!
+Welcome to MyOS!
+[Inferior 1 (Remote target) exited normally]
+SPEDE GDB$ quit 
+-[spede] ~/phase0-IllyaGY/01-hello-world {main %=}
+21:51:34 $ 
+-[spede] ~/phase0-IllyaGY/01-hello-world {main %=}
+21:51:35 $ spede-run -d 
+The SPEDE Target will be reset, are you sure? (y/n) y
+Resetting the SPEDE Target...
+Downloading image 'build/MyOS.dli' to SPEDE Target via /dev/pts/3...
+File type is 'ELF'
+Total blocks to download:  0x8a  (128 bytes each)
+
+Load Successful ; Code loaded at 0x0x101000 (4432 bytes/sec)
+Executing the image 'build/MyOS.dli' on the SPEDE Target with GDB Enabled
+Launching GDB...
+Reading symbols from build/MyOS.dli...
+Expanding full symbols from build/MyOS.dli...
+Remote debugging using /dev/pts/3
+0x0010255d in breakpoint ()
+Temporary breakpoint 1 at 0x101183: file src/hello.c, line 5.
+
+Temporary breakpoint 1, main () at src/hello.c:5
+5	    printf("Hello, world!\n");
