@@ -10,6 +10,7 @@
 #include <spede/stdio.h>        // For snprintf, used in vga_printf
 #include <spede/stdbool.h>      // for true/false values
 
+
 #define VGA_BASE                ((unsigned short *)(0xB8000))
 #define VGA_ATTR(bg, fg)        (((bg & 0xf) << 4) | (fg & 0xf))
 #define VGA_CHAR(bg, fg, c)     (((VGA_ATTR((bg & 0xf), (fg & 0xf)) << 8)) | (c))
@@ -202,6 +203,9 @@ void vga_putc_at(int x, int y, int bg, int fg, unsigned char c);
  */
 void vga_puts_at(int x, int y, int bg, int fg, char *s);
 
+
+/*Goes to the end of a text at a given column*/
+void vga_cursor_end();
 /**
  * Prints a formatted string to the VGA output
  *

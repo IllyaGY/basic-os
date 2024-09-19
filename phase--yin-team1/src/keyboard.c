@@ -4,26 +4,49 @@
  *
  * Keyboard Functions
  */
+
+
 #include "io.h"
+#include "vga.h"
 #include "kernel.h"
 #include "keyboard.h"
 
-#define CHAR_BUFFER 52 // LETTER upper and lower
+#define CHAR_BUFFER 0x39+1 // LETTER lower case only (largest letter scan code becomes our size) 
+#define NUM_BUFFER 0x0B+1 // NUMBERS  (largest number scan code becomes our size)
 
+#define EXIT_LIMIT 3 // Number of CTRL + ESC needed to exit the spede-target
 
+//Buffers for our letter and numbers
 unsigned char scan_to_ascii[CHAR_BUFFER] = {};
-unsigned char upper_case;     
-unsigned char offset; 
+unsigned char scan_to_num[NUM_BUFFER] = {};  
+
+//booleans
+unsigned char upper_case;
+unsigned char ctrl_pressed;
+unsigned char num_lock; 
+unsigned char exit_state; 
+
 
 
 /**
  * Initializes keyboard data structures and variables
  */
 void keyboard_init() {
+    //No upper_case by default 
     upper_case = 0;
+    //ctrl released by default
+    ctrl_pressed = 0;
+    //Num Lock
+    num_lock = 0; 
+    //if exit_state == 0, exist the spede-target
+    exit_state = EXIT_LIMIT; 
+
+
 
 
     kernel_log_info("Initializing keyboard driver");
+
+    //Letters
     scan_to_ascii[0x1E] = 0x61; // a
     scan_to_ascii[0x30] = 0x62; // b
     scan_to_ascii[0x2E] = 0x63; // c
@@ -50,6 +73,19 @@ void keyboard_init() {
     scan_to_ascii[0x2D] = 0x78; // x
     scan_to_ascii[0x15] = 0x79; // y
     scan_to_ascii[0x2C] = 0x7A; // z
+    scan_to_ascii[0x39] = ' '; 
+
+    //Numbers
+    scan_to_num[0x0B] = 0x30; // 0
+    scan_to_num[0x02] = 0x31; // 1
+    scan_to_num[0x03] = 0x32; // 2
+    scan_to_num[0x04] = 0x33; // 3
+    scan_to_num[0x05] = 0x34; // 4 
+    scan_to_num[0x06] = 0x35; // 5
+    scan_to_num[0x07] = 0x36; // 6
+    scan_to_num[0x08] = 0x37; // 7
+    scan_to_num[0x09] = 0x38; // 8
+    scan_to_num[0x0A] = 0x39; // 9
 }
 
 /**
@@ -70,9 +106,12 @@ unsigned int keyboard_scan(void) {
  *         that cannot be decoded
  */
 unsigned int keyboard_poll(void) {
+    //Accessing the status
     unsigned char c = KEY_NULL; 
     unsigned char i = inportb(KBD_PORT_STAT);
+    //If available
     if(i & 1){
+        //scan and decode
         c = keyboard_decode(keyboard_scan()); 
     }
     return c;
@@ -85,7 +124,6 @@ unsigned int keyboard_poll(void) {
  */
 unsigned int keyboard_getc(void) {
     unsigned int c = KEY_NULL;
-    
     while ((c = keyboard_poll()) == KEY_NULL);
     return c;
 }
@@ -106,13 +144,77 @@ unsigned int keyboard_getc(void) {
  * function should be called.
  */
 unsigned int keyboard_decode(unsigned int c) {
-    if(~(c & 0x80)){
-        if(c == KEY_SHIFT_LEFT || c == KEY_SHIFT_RIGHT || c == KEY_CAPS_LOCK)
-            upper_case = (upper_case) ? 0 : 0x20;
-        else if(scan_to_ascii[c])
-            return scan_to_ascii[c]-upper_case; 
-        else if(c == KEY_SHIFT_LEFT_REL || c == KEY_SHIFT_RIGHT_REL)
-            upper_case = (upper_case) ? 0 : 0x20;
+    //If key pressed
+    if(~(c & 0x80)){    
+        switch(c){
+            //Either one of them sets upper_Case to 1
+            case KEY_SHIFT_LEFT: 
+                upper_case ^= 1; 
+                return 0; 
+            case KEY_SHIFT_RIGHT:
+                upper_case ^= 1; 
+                return 0; 
+            case KEY_CAPS_LOCK: 
+                upper_case ^= 1; 
+                return 0; 
+            case KEY_CTRL_LEFT: 
+                ctrl_pressed ^= 1;  
+                return 0; 
+            case KEY_NUM_LOCK: 
+                num_lock ^= 1; 
+                return 0; 
+            case KEY_HOME:
+                vga_set_rowcol(vga_get_row(), 0);  
+                return 0;
+            case KEY_END: 
+                vga_cursor_end();
+                return 0; 
+                
+            default: 
+                if(!ctrl_pressed){
+                    if(scan_to_ascii[c])
+                    //if upper_case == 1 multiply 0x20 by 1 and we get the upper case letter instead of a lower
+                        return scan_to_ascii[c] - upper_case*0x20; 
+
+                    //Numbers
+                    else if(scan_to_num[c])
+                        return scan_to_num[c];
+                }
+
+                //ELSE we r continuing to the second switch statement(for release keys)
+            
+        }
     }
+    //If key released
+    switch(c){
+        case KEY_ESCAPE | 0x80:
+            if(!exit_state) kernel_exit(); 
+            exit_state--; 
+            return 0; 
+        exit_state = EXIT_LIMIT;
+        //if ctrl_pressed stay on upper case checking else go to functions
+        //if 'k' released and CTRL pressed do clear screen
+        case K | 0x80: 
+            if(ctrl_pressed) vga_clear();
+            return 0; 
+        case B | 0x80: 
+            if(ctrl_pressed) kernel_break();
+            return 0; 
+        case P | 0x80: 
+            if(ctrl_pressed) kernel_panic("Panic\0");
+            return 0; 
+
+        //Either one of them sets upper_Case to 1
+        case KEY_SHIFT_LEFT | 0x80: 
+            upper_case ^= 1; 
+            return 0; 
+        case KEY_SHIFT_RIGHT | 0x80:
+            upper_case ^= 1; 
+            return 0; 
+        case KEY_CTRL_LEFT | 0x80: 
+            ctrl_pressed ^= 1; 
+            return 0; 
+    }
+    
     return KEY_NULL;
 }

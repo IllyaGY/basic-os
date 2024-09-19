@@ -5,9 +5,12 @@
  * Operating system entry point
  */
 
+
 #include "vga.h"
+
 #include "keyboard.h"
 #include "bit.h"
+
 
 void main(void) {
     // Initialize the VGA driver

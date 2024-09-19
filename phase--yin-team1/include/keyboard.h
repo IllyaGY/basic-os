@@ -15,11 +15,11 @@
 
 // Special key definitions
 #define KEY_NULL                0x00
-#define KEY_ESCAPE              0x1B
+#define KEY_ESCAPE              0x01
 
 // Directional Keys
-#define KEY_HOME                0xE0
-#define KEY_END                 0xE1
+#define KEY_HOME                0x47
+#define KEY_END                 0x4F
 #define KEY_UP                  0xE2
 #define KEY_DOWN                0xE3
 #define KEY_LEFT                0xE4
@@ -29,10 +29,20 @@
 #define KEY_INSERT              0xE8
 #define KEY_DELETE              0xE9
 
+//Ctrl, Alt, NumLock 
+#define KEY_CTRL_LEFT           0x1D
+#define KEY_ALT_LEFT            0x38
+#define KEY_NUM_LOCK            0x45
+
+//Important keys for CTRL functions
+#define B                       0x30
+#define K                       0x25
+#define P                       0x19                       
+
+//Shift and Caps Lock
 #define KEY_SHIFT_LEFT          0x2A    
 #define KEY_SHIFT_RIGHT         0x36     
-#define KEY_SHIFT_LEFT_REL      0xAA     
-#define KEY_SHIFT_RIGHT_REL     0xB6  
+
 #define KEY_CAPS_LOCK           0x3A
 
 // Function Keys
@@ -48,6 +58,7 @@
 #define KEY_F10                 0xFA
 #define KEY_F11                 0xFB
 #define KEY_F12                 0xFC
+
 
 #ifndef ASSEMBLER
 
