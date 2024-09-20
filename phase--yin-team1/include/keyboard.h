@@ -20,24 +20,21 @@
 // Directional Keys
 #define KEY_HOME                0x47
 #define KEY_END                 0x4F
-#define KEY_UP                  0xE2
-#define KEY_DOWN                0xE3
-#define KEY_LEFT                0xE4
-#define KEY_RIGHT               0xE5
+#define KEY_UP                  0x48
+#define KEY_DOWN                0x50
+#define KEY_LEFT                0x4B
+#define KEY_RIGHT               0x4D
 #define KEY_PAGE_UP             0xE6
 #define KEY_PAGE_DOWN           0xE7
-#define KEY_INSERT              0xE8
+#define KEY_INSERT              0x52
 #define KEY_DELETE              0xE9
+#define KEY_BACKSPACE           0x0E
+
 
 //Ctrl, Alt, NumLock 
 #define KEY_CTRL_LEFT           0x1D
 #define KEY_ALT_LEFT            0x38
 #define KEY_NUM_LOCK            0x45
-
-//Important keys for CTRL functions
-#define B                       0x30
-#define K                       0x25
-#define P                       0x19                       
 
 //Shift and Caps Lock
 #define KEY_SHIFT_LEFT          0x2A    
@@ -91,6 +88,9 @@ unsigned int keyboard_poll(void);
  */
 unsigned int keyboard_getc(void);
 
+
+
+unsigned char keyboard_get_insert();
 /**
  * Processes raw keyboard input and decodes it.
  *

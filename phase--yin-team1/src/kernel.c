@@ -245,8 +245,12 @@ void kernel_command(char c) {
             kernel_break();
             break;
 
-        // Add new commands to:
-        //  - Clear the screen (k)
+        case 'k':
+        case 'K':
+            //Clear the screen (k)
+            vga_clear();
+            break; 
+
         //  - Increase the kernel log level (+)
         //  - Decrease the kernel log level (-)
 

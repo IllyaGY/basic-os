@@ -19,43 +19,43 @@ void main(void) {
     // Initialize the keyboard driver
     keyboard_init();
 
-    // vga_printf("Welcome to %s!\n", OS_NAME);
+    vga_printf("Welcome to %s!\n", OS_NAME);
 
-    // // Exercise the bit_* functions
-    // int value = 0xdecafbad;
-    // int count = bit_count(value);
-    // int test = bit_test(value, count);
+    // Exercise the bit_* functions
+    int value = 0xdecafbad;
+    int count = bit_count(value);
+    int test = bit_test(value, count);
 
-    // int toggle1 = 31;
-    // int toggle2 = 0;
+    int toggle1 = 31;
+    int toggle2 = 0;
 
-    // int value1 = bit_toggle(value, toggle1);
-    // int value2 = bit_toggle(value, toggle2);
+    int value1 = bit_toggle(value, toggle1);
+    int value2 = bit_toggle(value, toggle2);
 
-    // vga_printf("0x%08x has %d bits set\n", value, count);
-    // vga_printf("bit %d of 0x%08x is %d\n", count, value, test);
+    vga_printf("0x%08x has %d bits set\n", value, count);
+    vga_printf("bit %d of 0x%08x is %d\n", count, value, test);
 
-    // vga_printf("0x%08x -> toggling bit %d = 0x%08x\n", value, toggle1, value1);
-    // vga_printf("0x%08x -> toggling bit %d = 0x%08x\n", value, toggle2, value2);
+    vga_printf("0x%08x -> toggling bit %d = 0x%08x\n", value, toggle1, value1);
+    vga_printf("0x%08x -> toggling bit %d = 0x%08x\n", value, toggle2, value2);
 
-    // // Wait until a key is pressed
-    // vga_printf("Press any key to test VGA output\n");
-    // keyboard_getc();
-
-    // // Display every ASCII character
-    // for (int c = 0; c < 255; c++) {
-    //     vga_putc((unsigned char) c);
-    // }
-
-    // vga_printf("Press any key to test VGA colors\n");
+    // Wait until a key is pressed
+    vga_printf("Press any key to test VGA output\n");
     keyboard_getc();
 
-    // Test every color combination
-    // for (int x = 0; x <= 0xf; x++) {
-    //     for (int y = 0; y <= 0xf; y++) {
-    //         vga_putc_at(VGA_HEIGHT - y - 2, VGA_WIDTH - x - 2, y, x, '*');
-    //     }
-    // }
+    // Display every ASCII character
+    for (int c = 0; c < 255; c++) {
+        vga_putc((unsigned char) c);
+    }
+
+    vga_printf("Press any key to test VGA colors\n");
+    keyboard_getc();
+
+    //Test every color combination
+    for (int x = 0; x <= 0xf; x++) {
+        for (int y = 0; y <= 0xf; y++) {
+            vga_putc_at(VGA_HEIGHT - y - 2, VGA_WIDTH - x - 2, y, x, '*');
+        }
+    }
 
     //Print some helpful text
     vga_puts_at(VGA_HEIGHT-1, 0, VGA_COLOR_LIGHT_BLUE, VGA_COLOR_WHITE,

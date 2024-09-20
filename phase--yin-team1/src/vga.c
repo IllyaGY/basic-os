@@ -6,7 +6,7 @@
 #include "io.h"
 #include "kernel.h"
 #include "vga.h"
-
+#include "keyboard.h"
 
 typedef unsigned char u8_t;
 
@@ -37,10 +37,9 @@ void vga_init(void) {
  * Clears the VGA output and sets the background and foreground colors
  */
 void vga_clear(void) {
-    unsigned short *vga_buf = VGA_BASE;
     for (int row = 0; row < VGA_HEIGHT; row++) {
         for (int col = 0; col < VGA_WIDTH; col++) {
-            vga_buf[row * VGA_WIDTH + col] = VGA_CHAR(vga_bg_color, vga_fg_color, 0);
+            VGA_BASE[row * VGA_WIDTH + col] = VGA_CHAR(vga_bg_color, vga_fg_color, '\0');
         }
     }
     vga_row = 0;
@@ -109,6 +108,20 @@ void vga_putc(unsigned char c) {
     } else if (c == '\b') {
         if (vga_col > 0) vga_col--;
     } else {
+        if(!keyboard_get_insert()){
+            int index = vga_row * VGA_WIDTH + vga_col;
+            while(VGA_BASE[index] != '\0'){
+                index++;
+            }
+            int max = index;
+            index = vga_row * VGA_WIDTH + vga_col; 
+            while(max > index) {
+                VGA_BASE[max] = VGA_BASE[max-1];
+                max--;
+            }    
+                
+
+        }
         VGA_BASE[vga_row * VGA_WIDTH + vga_col] = VGA_CHAR(vga_bg_color, vga_fg_color, c);
         vga_col++;
     }
@@ -202,16 +215,23 @@ void vga_cursor_end(){
     while(VGA_BASE[vga_row * VGA_WIDTH + vga_col] != 0){
         vga_col++; 
         if (vga_col >= VGA_WIDTH){
-            vga_row=(vga_row < VGA_HEIGHT-1 ? vga_row+1 : 0); 
+            vga_row= vga_row < VGA_HEIGHT-1 ? vga_row+1 : 0; 
             vga_col = 0; 
         }
+        vga_cursor_update();
     }
-    vga_cursor_update();
+    
 }
+
+
 
 
 //Sets row and column
 void vga_set_rowcol(int row, int col){
+    if(row < 0 || row >= VGA_HEIGHT)
+        row = row < 0 ? 0 : VGA_HEIGHT-1; 
+    if(col < 0 || col >= VGA_WIDTH)
+        col = col < 0 ? 0 : VGA_WIDTH-1;
     vga_row=row;
     vga_col=col; 
     vga_cursor_update();
