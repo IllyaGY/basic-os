@@ -212,15 +212,14 @@ int vga_get_row(void) {
 
 /*Goes to the end of a text at a given column*/
 void vga_cursor_end(){
-    while(VGA_BASE[vga_row * VGA_WIDTH + vga_col] != 0){
-        vga_col++; 
-        if (vga_col >= VGA_WIDTH){
-            vga_row= vga_row < VGA_HEIGHT-1 ? vga_row+1 : 0; 
-            vga_col = 0; 
-        }
-        vga_cursor_update();
+    int index = vga_row * VGA_WIDTH + vga_col; 
+    while(VGA_BASE[index] == 0){
+        index--; 
+        
     }
-    
+    vga_row = index / VGA_WIDTH;
+    vga_col = index - vga_row; 
+    vga_cursor_update();
 }
 
 
