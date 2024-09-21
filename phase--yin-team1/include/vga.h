@@ -206,6 +206,13 @@ void vga_puts_at(int x, int y, int bg, int fg, char *s);
 
 /*Goes to the end of a text at a given column*/
 void vga_cursor_end();
+
+
+//Deletes the character
+void vga_delete_char(void);
+
+
+
 /**
  * Prints a formatted string to the VGA output
  *
@@ -213,6 +220,7 @@ void vga_cursor_end();
  * @param ... variable argument list for the string format
  * @return length of the string printed
  */
+
 #define vga_printf(fmt, ...) { \
     char _vga_printf_buf[VGA_WIDTH * VGA_HEIGHT] = {0}; \
     snprintf(_vga_printf_buf, sizeof(_vga_printf_buf), (fmt), ##__VA_ARGS__); \

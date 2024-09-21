@@ -17,6 +17,9 @@
 #define KERNEL_LOG_LEVEL_DEFAULT KERNEL_LOG_LEVEL_TRACE
 #endif
 
+#define ASCII_ESCAPE        0x1B
+
+
 // Current log level
 int kernel_log_level = KERNEL_LOG_LEVEL_DEFAULT;
 
@@ -252,9 +255,20 @@ void kernel_command(char c) {
             break; 
 
         //  - Increase the kernel log level (+)
-        //  - Decrease the kernel log level (-)
+        case '+':
+            // Increase the kernel log level
+            kernel_set_log_level(kernel_log_level + 1);
+            printf("Log level increased to %d.\n", kernel_log_level);
+            break;
 
-        case KEY_ESCAPE:
+        case '-':
+            // Decrease the kernel log level
+            kernel_set_log_level(kernel_log_level - 1);
+            printf("Log level decreased to %d.\n", kernel_log_level);
+            break;
+            //  - Decrease the kernel log level (-)
+
+        case ASCII_ESCAPE:
             // Exit the OS if we press escape three times in a row
             kernel_escape++;
 

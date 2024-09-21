@@ -210,19 +210,25 @@ int vga_get_row(void) {
     return vga_row;
 }
 
-/*Goes to the end of a text at a given column*/
-void vga_cursor_end(){
-    int index = vga_row * VGA_WIDTH + vga_col; 
-    while(VGA_BASE[index] == 0){
-        index--; 
-        
+
+void vga_delete_char(void) {
+    // Calculate the index of the current cursor position
+    int index = vga_row * VGA_WIDTH + vga_col;
+
+    // Make sure we don't delete past the last character on the screen
+    if (index < VGA_WIDTH * VGA_HEIGHT - 1) {
+        // Move all characters after the cursor position forward by one
+        for (int i = index; i < VGA_WIDTH * VGA_HEIGHT - 1; i++) {
+            VGA_BASE[i] = VGA_BASE[i + 1];
+        }
+
+        // Clear the last character in the buffer
+        VGA_BASE[VGA_WIDTH * VGA_HEIGHT - 1] = VGA_CHAR(vga_bg_color, vga_fg_color, ' ');
     }
-    vga_row = index / VGA_WIDTH;
-    vga_col = index - vga_row; 
+
+    // Update the cursor position (keep it where it is)
     vga_cursor_update();
 }
-
-
 
 
 //Sets row and column
