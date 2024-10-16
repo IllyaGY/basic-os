@@ -24,11 +24,11 @@ int main(void) {
     // Initialize timers
     timer_init();
 
-    // Initialize the VGA driver
-    vga_init();
-    
     // Initialize the TTY
     tty_init();
+
+    // Initialize the VGA driver
+    vga_init();
 
     // Initialize the keyboard driver
     keyboard_init();

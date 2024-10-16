@@ -24,7 +24,7 @@ int vga_pos_x = 0;
 int vga_pos_y = 0;
 
 // Current background color, default to black
-int vga_color_bg = VGA_COLOR_BLACK;
+int vga_color_bg = VGA_COLOR_BLUE;
 
 // Current foreground color, default to light grey
 int vga_color_fg = VGA_COLOR_LIGHT_GREY;
@@ -43,16 +43,18 @@ int vga_scroll = 0;
 void vga_init(void) {
     kernel_log_info("Initializing VGA driver");
 
-    if (vga_cursor) {
-        // Enable the cursor
-        vga_cursor_enable();
-    } else {
-        // Disable the cursor
-        vga_cursor_disable();
-    }
+    // if (vga_cursor) {                <---- Cursor is enabled inside tty
+    //     // Enable the cursor
+    //     vga_cursor_enable();
+    // } else {
+    //     // Disable the cursor
+    //     vga_cursor_disable();
+    // }
 
     // Clear the screen
     vga_clear();
+
+
 }
 
 /**
@@ -74,13 +76,19 @@ void vga_cursor_update(void) {
  * Clears the VGA output and sets the background and foreground colors
  */
 void vga_clear(void) {
+
     unsigned short *vga_buf = VGA_BASE;
 
     for (unsigned int i = 0; i < (VGA_WIDTH * VGA_HEIGHT); i++) {
         vga_buf[i] = VGA_CHAR(vga_color_bg, vga_color_fg, 0x00);
     }
 
+    
+
+
     vga_set_xy(0, 0);
+
+
 }
 
 /**
@@ -201,7 +209,7 @@ void vga_putc(char c) {
         case '\b':
             if (vga_pos_x != 0) {
                 vga_pos_x--;
-            } else if (vga_pos_y != 0) {
+            } else if (vga_pos_y > 1) {
                 vga_pos_y--;
                 vga_pos_x = VGA_WIDTH-1;
             }

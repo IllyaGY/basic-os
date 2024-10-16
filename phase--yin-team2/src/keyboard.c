@@ -285,8 +285,27 @@ unsigned int keyboard_poll(void) {
 
     if ((inportb(KBD_PORT_STAT) & 0x1) != 0) {
         c = keyboard_scan();
-        c = keyboard_decode(c);
     }
+
+    //look for first byte "0xE0" before you specify which keys you'll ignore
+    if (c == 0xE0) {
+        unsigned int next_byte = keyboard_scan();
+        switch (next_byte) {
+            case 0x48: // Up arrow 
+            case 0x50: // Down arrow 
+            case 0x4B: // Left arrow 
+            case 0x4D: // Right arrow 
+                return KEY_NULL;
+            case 0x49: // Page Up
+                tty_scroll_up();
+                return KEY_NULL;
+            case 0x51: // Page Down
+                tty_scroll_down();
+                return KEY_NULL;
+        }
+    }
+    c = keyboard_decode(c);
+    
 
     return c;
 }
@@ -387,6 +406,12 @@ unsigned int keyboard_decode(unsigned int c) {
             }
             break;
 
+        case KEY_PAGE_UP: 
+            if(key_pressed)
+                return c; 
+        case KEY_PAGE_DOWN: 
+            if(key_pressed)
+                return c; 
         
         // Handle all other input
         default:

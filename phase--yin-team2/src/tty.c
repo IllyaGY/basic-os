@@ -19,6 +19,7 @@
 #define TTY_PORT_ADDR       0x3D4
 #define TTY_PORT_DATA       0x3D5
 
+#define COLOR_GREY 0x7
 
 // TTY Table
 struct tty_t tty_table[TTY_MAX];
@@ -26,9 +27,9 @@ struct tty_t tty_table[TTY_MAX];
 // Current Active TTY
 struct tty_t *active_tty;
 
-int tty_current = 0;
-int tty_new_char = 0;       //<-- Helps keep the cursor at x = 0 when doing pressing Enter
+int tty_current = -1;
 int tty_cursor = 1;
+
 
 
 
@@ -65,20 +66,79 @@ void tty_cursor_update(void){
         outportb(TTY_PORT_DATA, (unsigned char)((curs_pos >> 8) & 0xFF));
 
     }
+}
+
+void update_info_display() {
+
+    for(int i = 0; i < TTY_WIDTH; i++)
+        vga_putc_at(i, 0, COLOR_GREY, VGA_COLOR_BLUE, ' ');          //Clearing the first line 
+    char os_info[] = "basicOS"; 
+    for (int i = 0; os_info[i] != '\0' ; i++) {
+        vga_putc_at(i, 0, COLOR_GREY, VGA_COLOR_BLUE, os_info[i]);
+        
+    }
+    
+    // Clear the last line
+    for (int x = 0; x < TTY_WIDTH; x++) {
+        vga_putc_at(x, TTY_HEIGHT - 1, COLOR_GREY, active_tty->color_fg, ' '); // Clear last line
+    }
+
+    // Display current row and column
+    char position_info[70]; 
+    snprintf(position_info, sizeof(position_info), "TTY(%d) Column(%d) Row(%d) Scrollback(%d), use Page UP or DOWN", tty_current, active_tty->pos_x, active_tty->pos_y, active_tty->pos_scroll);
+    
+    // Display the position info on the last line
+    for (int i = 0; position_info[i] != '\0' && i < TTY_WIDTH; i++) {
+        vga_putc_at(i, TTY_HEIGHT - 1, COLOR_GREY, active_tty->color_fg, position_info[i]);
+    }
+
+    
+}
+
+void tty_scroll_up(){
+    if(!active_tty->pos_scroll) return; 
+    active_tty->pos_scroll--; 
+
+    vga_clear();
+     //Move everything one line down in the vga
+    for(unsigned int i = TTY_WIDTH; i < TTY_WIDTH * (TTY_HEIGHT - 1) ; i++){
+        char c = active_tty->buf[i+active_tty->pos_scroll * TTY_WIDTH];
+        vga_putc_at(i%TTY_WIDTH, i/TTY_WIDTH, active_tty->color_bg, active_tty->color_fg, c);
+    }
+
+    update_info_display();  //Used when called from keyboard.c
+}
+
+void tty_scroll_down(void){
+    if(active_tty->pos_scroll >= 10) return;
+    active_tty->pos_scroll++;
+    
+    vga_clear();
+
+    //Move everything one line up in the vga
+    for(unsigned int i = TTY_WIDTH; i < TTY_WIDTH * (TTY_HEIGHT - 1); i++){
+        char c = active_tty->buf[i+active_tty->pos_scroll * TTY_WIDTH];
+        vga_putc_at(i%TTY_WIDTH, i/TTY_WIDTH, active_tty->color_bg, active_tty->color_fg, c);
+    }
+          
+    update_info_display();  //Used when called from keyboard.c
 
 }
 
-void tty_putc(char c){
-    
+void tty_putc(unsigned char c){
     switch (c) {
         case '\b':
-            if (active_tty->pos_x != 0) {
+            if (active_tty->pos_x > 0) {
                 active_tty->pos_x--;
-            } else if (active_tty->pos_y != 0) {
+            } else if (active_tty->pos_y > 1) {
                 active_tty->pos_y--;
                 active_tty->pos_x=TTY_WIDTH-1; 
             }
-            active_tty->buf[active_tty->pos_x + active_tty->pos_y * TTY_WIDTH] = 0x00;
+            else if (active_tty->pos_scroll > 0){
+                tty_scroll_up();
+                active_tty->pos_x=TTY_WIDTH-1; 
+            }
+            vga_putc_at(active_tty->pos_x, active_tty->pos_y, active_tty->color_bg,active_tty->color_fg,' ');
             break;
 
         case '\t':
@@ -86,9 +146,10 @@ void tty_putc(char c){
             if (active_tty->pos_x >= TTY_WIDTH) {
                 active_tty->pos_x-=TTY_WIDTH;
                 active_tty->pos_y++; 
-            }if (active_tty->pos_y >= TTY_HEIGHT) {
-                active_tty->pos_y = 0;
-                active_tty->pos_x -= TTY_WIDTH; 
+            }if (active_tty->pos_y >= TTY_HEIGHT-1) {
+                active_tty->pos_y--;
+                tty_scroll_down();
+
             }
             break;
 
@@ -99,38 +160,33 @@ void tty_putc(char c){
         case '\n':
             active_tty->pos_x = 0;
             active_tty->pos_y++;
+            if(active_tty->pos_y >=TTY_HEIGHT-1){
+                active_tty->pos_y--;
+                tty_scroll_down();
+                active_tty->pos_x = 0;
+            }
+            
             break;
-
 
         default:
-            active_tty->buf[active_tty->pos_x + active_tty->pos_y * TTY_WIDTH] = c;
-            tty_new_char = 1; 
+            vga_putc_at(active_tty->pos_x, active_tty->pos_y, active_tty->color_bg,active_tty->color_fg,c);
+            
+            active_tty->pos_x++;
+            if (active_tty->pos_x >= TTY_WIDTH) {
+                active_tty->pos_x = 0;
+                active_tty->pos_y++;
+            }
+            if(active_tty->pos_y >= TTY_HEIGHT-1){
+                active_tty->pos_y--;
+                tty_scroll_down();
+                active_tty->pos_x = 0; 
+            }
             break;
+            
     }
 
-
-
-    //if (active_tty->pos_scroll) {
-        // Handle end of rows
-        // if (active_tty->pos_y >= TTY_HEIGHT) {
-        //     // Scroll the screen up (copy each row to the previous)
-        //     for (unsigned int i = 0; i < VGA_WIDTH * (VGA_HEIGHT - 1); i++) {
-        //         vga_buf[i] = vga_buf[VGA_WIDTH + i];
-        //     }
-
-        //     // Clear the last line
-        //     for (unsigned int i = 0; i < VGA_WIDTH; i++) {
-        //         vga_buf[i + (VGA_WIDTH * (VGA_HEIGHT-1))] = VGA_CHAR(vga_color_bg, vga_color_fg, ' ');
-        //     }
-
-        //     vga_pos_y = VGA_HEIGHT - 1;
-        // }
-
-    //}
-
-
-} 
-
+   
+}
 
 
 /**
@@ -156,24 +212,27 @@ void tty_select(int n) {
             active_tty = &tty_table[n];
             kernel_log_info("Previous tty is selected %i", n); 
         }
-        else kernel_log_error("No tty selected");
+        else{
+            n = tty_current;
+            kernel_log_error("No tty selected");
+        }
     }
     
-    // if a new tty is selected, the tty should trigger a refresh
     if(tty_current != n){
+        
         vga_clear();
-        //First we need to ensure we load up all the text for our new current active_tty back to the screen
-        int x = 0; 
-        int y = 0; 
         //New current index
         tty_current = n;
-        //Retrieve the old text before writing down the new character                <--- The issue with adding an extra space is probably here, due to a 1 added somewhere          
-        vga_puts_at(x, y, active_tty->color_bg, active_tty->color_fg, active_tty->buf);
+        //Retrieve the old text before writing down the new character 
+        int i = TTY_WIDTH;
+        while(i < TTY_WIDTH*(TTY_HEIGHT-2+TTY_SCROLLBACK)){
+            vga_putc_at(i%80, i/80, active_tty->color_bg, active_tty->color_fg, active_tty->buf[i+active_tty->pos_scroll * TTY_WIDTH]);
+            i++;
+        }
         tty_cursor_update();
+        update_info_display();
         kernel_log_info("New tty");
-        active_tty->refresh = 1; 
     }
-    
     
 }
 
@@ -191,34 +250,14 @@ void tty_refresh(void) {
     // ** hint: use vga_putc_at() since you are setting specific characters
     //          at specific locations
     // Reset the tty's refresh flag so we don't refresh unnecessarily
-    if(active_tty->refresh){          
-        vga_putc_at(
-        active_tty->pos_x, 
-        active_tty->pos_y, 
-        active_tty->color_bg, 
-        active_tty->color_fg, 
-        active_tty->buf[active_tty->pos_y * TTY_WIDTH + active_tty->pos_x]);      
-        
-        if(tty_new_char && active_tty->buf[active_tty->pos_y * TTY_WIDTH + active_tty->pos_x] != 0x00){                                             
-            //   Adjust the x/y positions as necessary <------ I moved this part here instead of keeping that in the tty_update
-            active_tty->pos_x++;
-            if(active_tty->pos_x == TTY_WIDTH) {
-                active_tty->pos_y++;
-                active_tty->pos_x = 0;
-            } 
-            if(active_tty->pos_y == TTY_HEIGHT) {
-                active_tty->pos_y = 0;
-                active_tty->pos_x = 0;
-            } 
-            tty_new_char = 0; 
-            //   Handle scrolling at the bottom                 <------ STILL NEEDS ADJUSTMENTS, SCROLLING NOT DONE YET
-        }
+    if(active_tty->refresh){ 
+        tty_putc(active_tty->buf[active_tty->pos_x + (active_tty->pos_y + active_tty->pos_scroll) * TTY_WIDTH]);
+         // Update current cursor position display
+        update_info_display();
         tty_cursor_update();
         active_tty->refresh = 0; 
     }
-    
-     
-            
+               
     
 }
 
@@ -236,10 +275,12 @@ void tty_update(char c) {
     // Instead of writing to the VGA display directly, you will write
     // to the tty buffer.
 
-    tty_putc(c);
+    if(c != 0x00)
+        active_tty->buf[active_tty->pos_x + (active_tty->pos_y+active_tty->pos_scroll) * TTY_WIDTH] = c;
+
     // If the screen should be updated, the refresh flag should be set
     // to trigger the the VGA update via the tty_refresh callback
-    active_tty->refresh = 1;
+    active_tty->refresh = 1; 
 
 
     
@@ -259,8 +300,11 @@ void tty_init(void) {
     memset(tty_table, 0, sizeof(tty_table));
 
     for(int i = 0; i < TTY_MAX;i++){
-        tty_table[i].color_fg = 0xF;                 // <-- White foreground for testing 
-    }
+        tty_table[i].color_bg = VGA_COLOR_BLUE;
+        tty_table[i].color_fg = VGA_COLOR_WHITE;
+        tty_table[i].pos_y = 1; 
+       
+    }  
 
     if(tty_cursor){
         tty_cursor_enable();
@@ -268,15 +312,18 @@ void tty_init(void) {
     else 
         tty_cursor_disable();
 
+    
+    
 
     // Select tty 0 to start with
-    tty_select(0);
+    tty_select(0);  
 
+    
+    
 
 
     // Register a timer callback to update the screen on a regular interval
-
-    //Since we have 100 milliseconds / 10 = 10 times per second
-    timer_callback_register(tty_refresh, 10, -1); 
+    //Since we have 100 milliseconds / 5 = 20 times per second
+    timer_callback_register(tty_refresh, 5, -1); 
 }
 
