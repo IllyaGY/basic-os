@@ -89,24 +89,38 @@ void scheduler_add(proc_t *proc) {
  */
 void scheduler_remove(proc_t *proc) {
 
-    if(proc->state != ACTIVE) return; 
+    int pid;
 
-        
-    int next; 
-    if(queue_out(&run_queue, &next) == -1){
-        next = 0; 
-    } 
-    
+    if (!proc) {
+        kernel_panic("Invalid process!");
+        exit(1);
+    }
+
+
+    for (int i = 0; i < run_queue.size; i++) {
+        if (queue_out(&run_queue, &pid) != 0) {
+            kernel_panic("Unable to queue out the process entry");
+        }
+
+        if (proc->pid == pid) {
+            // Found the process
+            // continue iterating so the run queue order is maintained
+            continue;
+        }
+
+        // Add the item back to the run queue
+        if (queue_in(&run_queue, pid) != 0) {
+            kernel_panic("Unable to queue process back to the run queue");
+        }
+    }
+
     memset(active_proc,0,sizeof(proc_t));
 
-    // Update the active proc pointer
-    active_proc = pid_to_proc(next);
-
-    // Make sure we have a valid process at this point
-    if (active_proc != NULL) {
-        // Ensure that the process state is set
-        active_proc->state = ACTIVE; 
-        kernel_log_info("Switched to process %d", active_proc->pid);
+    
+    // If the process is the current process, ensure that the current
+    // process is reset so a new process will be scheduled
+    if (proc == active_proc) {
+        active_proc = NULL;
     }
 }
 

@@ -88,18 +88,18 @@ proc_t * entry_to_proc(int entry) {
  * @return process id of the created process, -1 on error
  */
 int kproc_create(void *proc_ptr, char *proc_name, proc_type_t proc_type) {
-    proc_t *proc = NULL;
+    proc_t *proc; 
 
-    int id = 0; 
+    int proc_entry = 0; 
     // Allocate an entry in the process table via the process allocator
-    if(queue_out(&proc_allocator, &id) == -1){
+    if(queue_out(&proc_allocator, &proc_entry) == -1){
         kernel_log_info("Error");
         return -1;
     }
 
 
     // Initialize the process control block
-    proc = malloc(sizeof(proc_t));
+    proc = &proc_table[proc_entry];
     memset(proc, 0, sizeof(proc_t));
 
     // Initialize the process stack via proc_stack
@@ -115,9 +115,8 @@ int kproc_create(void *proc_ptr, char *proc_name, proc_type_t proc_type) {
     proc->state = IDLE; 
     proc->type = proc_type;
     proc->start_time = timer_get_ticks();  
-    //All these are set to 0 by the memset function 
-    // proc->run_time = 0; 
-    // proc->cpu_time = 0; 
+    proc->run_time = 0; 
+    proc->cpu_time = 0; 
    
 
     next_pid++;
@@ -138,19 +137,11 @@ int kproc_create(void *proc_ptr, char *proc_name, proc_type_t proc_type) {
     proc->trapframe->gs = get_gs();
 
     // Add the process to the scheduler
-    //If it is not the idle process add it to the scheduler
-    if(proc->pid > 0)
-        scheduler_add(proc);
+    scheduler_add(proc);
 
     kernel_log_info("Created process %s (%d) entry=%d", proc->name, proc->pid, -1);
    
-
-    //Finally after creating the process we place its copy into the proc_table
-    proc_table[id] = *proc; 
-
-    free(proc); 
-
-    return proc_table[id].pid;
+    return proc_table[proc_entry].pid;
 }
 
 /**

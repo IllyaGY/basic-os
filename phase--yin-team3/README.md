@@ -4,7 +4,20 @@
 # Please update your teammate information, it will be easier for lecturer to grade and put assignment score to Canvas. 
 
 Team member:
-Illya Gordyy,
-Yousif Alrubaye,
-Nikolay Chkhaylo
+* Illya Gordyy,
+* Yousif Alrubaye,
+* Nikolay Chkhaylo
+
+### Grading Phase 2
+
+#### Strength
+* Implemented all functions
+* Implemented cursor
+* Implemented scroll up/down function.
+
+#### weakness
+* No peer review. Solving git conflicts is one of the most important skills in real working environment. 
+
+#### Overall
+* Your team get a very good progress comparing to Phase one. Keep a good work. I hope I can see peer review and other teammate contribution to main branch.
 
